@@ -1,15 +1,18 @@
 services:
   n8n:
-    image: n8nio/n8n
+    image: docker.n8n.io/n8nio/n8n
     container_name: n8n-server
     restart: unless-stopped
     ports:
       - "5678:5678"
     environment:
-      - N8N_HOST=localhost
+      - N8N_HOST=0.0.0.0
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
-      - WEBHOOK_URL=http://localhost:5678/
+      - N8N_SECURE_COOKIE=false
+      - WEBHOOK_URL=http://54.180.142.102:5678/
+      - GENERIC_TIMEZONE=Asia/Seoul
+      - TZ=Asia/Seoul
     volumes:
       - n8n_data:/home/node/.n8n
 
@@ -24,7 +27,7 @@ services:
     env_file:
       - .env
     environment:
-      WEBHOOK_URL: ${WEBHOOK_URL}
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://n8n-server:5678/}
     volumes:
       - report_data:/app/data
     extra_hosts:
