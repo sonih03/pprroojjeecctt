@@ -1,0 +1,50 @@
+services:
+  n8n:
+    image: n8nio/n8n
+    container_name: n8n-server
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+  backend:
+    build:
+      context: ./report-automation-backend
+      dockerfile: Dockerfile
+    container_name: report-automation-backend
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      WEBHOOK_URL: ${WEBHOOK_URL}
+    volumes:
+      - report_data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    expose:
+      - "8000"
+    depends_on:
+      - n8n
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    container_name: report-automation-nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-80}:80"
+    depends_on:
+      - backend
+
+volumes:
+  n8n_data:
+  report_data:
